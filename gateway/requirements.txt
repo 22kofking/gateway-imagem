@@ -1,0 +1,5 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+httpx>=0.27
+# Só necessário se o storage S3/R2 estiver configurado
+boto3>=1.34

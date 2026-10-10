@@ -1,0 +1,6 @@
+runpod>=1.7
+# FLUX.2 klein exige uma versão recente do diffusers
+diffusers @ git+https://github.com/huggingface/diffusers
+transformers
+accelerate
+sentencepiece

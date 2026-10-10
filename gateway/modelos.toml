@@ -1,0 +1,36 @@
+# Catálogo de modelos do gateway.
+#
+# Os apps só conhecem o nome público (rapido, texto...). Cada modelo tem uma
+# lista de rotas em ordem de preferência: o gateway usa a primeira que estiver
+# configurada e, se ela falhar ao receber o pedido, tenta a próxima.
+#
+# Provedores:
+#   runpod          seu endpoint Serverless (id em uma variável de ambiente)
+#   runpod_publico  modelo já hospedado pela RunPod (Public Endpoint)
+#   fal             modelo hospedado pela fal.ai
+
+[modelos.rapido]
+descricao = "Rápido e barato. FLUX.2 klein 4B no seu endpoint; Z-Image Turbo nas reservas."
+
+  [[modelos.rapido.rotas]]
+  provedor = "runpod"
+  endpoint_env = "RUNPOD_ENDPOINT_RAPIDO"
+
+  [[modelos.rapido.rotas]]
+  provedor = "runpod_publico"
+  endpoint = "z-image-turbo"
+
+  [[modelos.rapido.rotas]]
+  provedor = "fal"
+  modelo = "fal-ai/z-image/turbo"
+
+[modelos.texto]
+descricao = "Melhor para imagens com texto escrito (Qwen-Image)."
+
+  [[modelos.texto.rotas]]
+  provedor = "runpod_publico"
+  endpoint = "qwen-image-t2i"
+
+  [[modelos.texto.rotas]]
+  provedor = "fal"
+  modelo = "fal-ai/qwen-image"
