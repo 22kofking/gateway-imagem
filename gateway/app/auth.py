@@ -2,13 +2,17 @@
 
 import secrets
 
-from fastapi import Header, HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import AppKey, settings
 
+# HTTPBearer também faz aparecer o botão "Authorize" em /docs
+bearer = HTTPBearer(auto_error=False, description="Chave do app (GATEWAY_APP_KEYS)")
 
-def current_app(authorization: str = Header(default="")) -> AppKey:
-    token = authorization.removeprefix("Bearer ").strip()
+
+def current_app(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> AppKey:
+    token = credentials.credentials.strip() if credentials else ""
     if token:
         for app in settings.apps:
             if secrets.compare_digest(token, app.key):

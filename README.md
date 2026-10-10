@@ -28,14 +28,15 @@ App ──► gateway/ (FastAPI, servidor comum) ──► 1. seu endpoint RunPo
 
 ```bash
 cd gateway
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-cp .env.example .env        # preencha RUNPOD_API_KEY e GATEWAY_APP_KEYS
-set -a && source .env && set +a
-uvicorn app.main:app --reload --port 8000
+cp .env.example .env               # Windows: copy .env.example .env
+# edite o .env: preencha RUNPOD_API_KEY e GATEWAY_APP_KEYS
+uvicorn app.main:app --env-file .env --port 8000
 ```
 
-Abra http://localhost:8000/docs para testar pelo navegador. **Só com a chave da RunPod já funciona**, usando os modelos prontos dela; o seu endpoint próprio e a fal são opcionais.
+Abra http://localhost:8000/docs, clique em **Authorize**, informe a chave do app (a parte antes do `:` em `GATEWAY_APP_KEYS`) e teste `POST /v1/images` pelo navegador. **Só com a chave da RunPod já funciona**, usando os modelos prontos dela; o seu endpoint próprio e a fal são opcionais.
 
 Testes: `pytest` (dentro de `gateway/`).
 
