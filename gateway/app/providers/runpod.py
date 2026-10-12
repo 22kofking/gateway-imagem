@@ -110,11 +110,16 @@ class RunPodPublic(_RunPodBase):
         return route.get("endpoint", "")
 
     def payload(self, req: ImageRequest) -> dict:
-        return {
+        body = {
             "prompt": req.prompt,
             "size": f"{req.width}*{req.height}",
             "seed": -1 if req.seed is None else req.seed,
         }
+        if req.image:
+            body["image"] = req.image  # link ou data URI: a RunPod aceita os dois
+            if req.strength is not None:
+                body["strength"] = req.strength
+        return body
 
     def parse_output(self, output: dict) -> PollResult:
         url = output.get("result") or output.get("image_url")

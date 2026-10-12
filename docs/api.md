@@ -10,13 +10,16 @@ Pede uma imagem.
 |---|---|---|---|
 | `prompt` | texto | obrigatório | Até 2000 caracteres |
 | `model` | texto | `rapido` | Nome do catálogo (`GET /v1/models`) |
-| `size` | texto | `1024x1024` | `1024x1024`, `1024x768`, `768x1024`, `1280x720`, `720x1280` |
+| `size` | texto | `1024x1024` | `LARGURAxALTURA`, cada lado entre 256 e 1536 (ex.: `1024x448`, `512x704`) |
 | `seed` | número | aleatório | Mesmo seed + mesmo prompt = mesma imagem (no mesmo provedor) |
+| `image` | texto | nenhum | Imagem de entrada (image-to-image): link `https://` ou data URI (`data:image/png;base64,...`), até ~9 MB |
+| `strength` | número | 0.8 | Com `image`: quanto a imagem pode mudar, de 0 (igual) a 1 (do zero) |
 | `wait` | booleano | `false` | Esperar a imagem ficar pronta (até `GATEWAY_SYNC_WAIT` segundos) |
 
 Respostas:
 - `202` com `status: "running"`: consulte `GET /v1/jobs/{id}`.
 - `200` com `status: "succeeded"` e `images`: pronto (modo `wait` ou provedor rápido).
+- Pedido com `image` só vai para as rotas do catálogo marcadas com `aceita_imagem = true` (hoje, o Z-Image Turbo da RunPod no modelo `rapido`).
 - `400` modelo desconhecido · `401` chave inválida · `422` campo inválido · `429` limite diário atingido · `503` nenhum provedor aceitou.
 
 ## GET /v1/jobs/{id}

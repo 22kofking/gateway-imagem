@@ -17,14 +17,18 @@ class NoRouteAvailable(Exception):
     pass
 
 
-def available_routes(model: str) -> list[dict]:
-    return [r for r in catalog[model]["rotas"] if PROVIDERS[r["provedor"]].configured(r)]
+def available_routes(model: str, req: ImageRequest | None = None) -> list[dict]:
+    """Rotas configuradas do modelo; com imagem de entrada, só as que aceitam (`aceita_imagem`)."""
+    routes = [r for r in catalog[model]["rotas"] if PROVIDERS[r["provedor"]].configured(r)]
+    if req is not None and req.image:
+        routes = [r for r in routes if r.get("aceita_imagem")]
+    return routes
 
 
 def create(app_name: str, req: ImageRequest) -> str:
     """Tenta as rotas do modelo em ordem até uma aceitar o pedido."""
     errors = []
-    for route in available_routes(req.model):
+    for route in available_routes(req.model, req):
         provider = PROVIDERS[route["provedor"]]
         try:
             provider_job_id = provider.submit(route, req)
@@ -35,6 +39,8 @@ def create(app_name: str, req: ImageRequest) -> str:
         job_id = "img_" + uuid.uuid4().hex[:20]
         db.insert_job(job_id, app_name, req.model, provider.name, route, provider_job_id)
         return job_id
+    if not errors and req.image and available_routes(req.model):
+        raise NoRouteAvailable("nenhuma rota deste modelo aceita imagem de entrada")
     raise NoRouteAvailable("; ".join(errors) or "nenhum provedor configurado para este modelo")
 
 
