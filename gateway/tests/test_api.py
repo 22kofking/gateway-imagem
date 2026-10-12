@@ -2,6 +2,8 @@ import base64
 
 from tests.conftest import AUTH, PNG
 
+IMG = "data:image/png;base64," + base64.b64encode(PNG).decode()
+
 
 def test_health_sem_chave(client):
     assert client.get("/health").json() == {"ok": True}
@@ -14,7 +16,10 @@ def test_sem_chave_da_401(client):
 
 def test_validacao(client):
     assert client.post("/v1/images", json={"prompt": ""}, headers=AUTH).status_code == 422
-    assert client.post("/v1/images", json={"prompt": "gato", "size": "999x999"}, headers=AUTH).status_code == 422
+    for size in ("2000x1024", "100x100", "grande", "1024*448"):
+        assert client.post("/v1/images", json={"prompt": "gato", "size": size}, headers=AUTH).status_code == 422
+    assert client.post("/v1/images", json={"prompt": "gato", "image": "file:///etc/passwd"}, headers=AUTH).status_code == 422
+    assert client.post("/v1/images", json={"prompt": "gato", "image": IMG, "strength": 2}, headers=AUTH).status_code == 422
     r = client.post("/v1/images", json={"prompt": "gato", "model": "nao-existe"}, headers=AUTH)
     assert r.status_code == 400
 
@@ -91,7 +96,8 @@ def test_limite_diario(client):
 
 def test_uso_e_custo(client, fake):
     fake.own_endpoint_fails = True
-    client.post("/v1/images", json={"prompt": "gato", "wait": True}, headers=AUTH)
+    job = client.post("/v1/images", json={"prompt": "gato", "wait": True}, headers=AUTH).json()
+    assert job["cost_usd"] == 0.005
     usage = client.get("/v1/usage", headers=AUTH).json()
     assert usage["hoje"] == 1
     assert usage["por_modelo"] == [{"model": "rapido", "provider": "runpod_publico", "imagens": 1, "custo_usd": 0.005}]
@@ -107,3 +113,24 @@ def test_storage_copia_imagens_para_o_bucket(client, fake, s3):
 def test_storage_com_imagem_em_bytes(client, s3):
     job = client.post("/v1/images", json={"prompt": "gato", "wait": True}, headers=AUTH).json()
     assert job["images"] == [f"https://img.exemplo.com/site/{job['id']}/0.png"]
+
+
+def test_tamanho_livre_vai_para_o_publico(client, fake, monkeypatch):
+    monkeypatch.delenv("RUNPOD_ENDPOINT_RAPIDO")
+    client.post("/v1/images", json={"prompt": "gato", "size": "1024x448", "seed": 3}, headers=AUTH)
+    assert fake.calls[0][2] == {"input": {"prompt": "gato", "size": "1024*448", "seed": 3}}
+
+
+def test_imagem_de_entrada_so_vai_para_rota_que_aceita(client, fake):
+    body = {"prompt": "gato de chapéu", "image": IMG, "strength": 0.4, "size": "512x704", "wait": True}
+    job = client.post("/v1/images", json=body, headers=AUTH).json()
+    assert job["status"] == "succeeded" and job["cost_usd"] == 0.005
+    # o endpoint próprio (sem aceita_imagem) é pulado: a primeira chamada já é o z-image-turbo
+    assert fake.calls[0][1] == "https://api.runpod.ai/v2/z-image-turbo/run"
+    assert fake.calls[0][2]["input"] == {"prompt": "gato de chapéu", "size": "512*704", "seed": -1,
+                                         "image": IMG, "strength": 0.4}
+
+
+def test_modelo_sem_rota_de_imagem_da_503(client):
+    r = client.post("/v1/images", json={"prompt": "gato", "model": "texto", "image": IMG}, headers=AUTH)
+    assert r.status_code == 503 and "imagem de entrada" in r.json()["detail"]

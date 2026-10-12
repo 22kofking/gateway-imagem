@@ -8,6 +8,9 @@
 #   runpod          seu endpoint Serverless (id em uma variável de ambiente)
 #   runpod_publico  modelo já hospedado pela RunPod (Public Endpoint)
 #   fal             modelo hospedado pela fal.ai
+#
+# aceita_imagem = true: a rota faz image-to-image (campos `image` e `strength`).
+# Pedido com imagem de entrada só vai para essas rotas.
 
 [modelos.rapido]
 descricao = "Rápido e barato. FLUX.2 klein 4B no seu endpoint; Z-Image Turbo nas reservas."
@@ -19,6 +22,7 @@ descricao = "Rápido e barato. FLUX.2 klein 4B no seu endpoint; Z-Image Turbo na
   [[modelos.rapido.rotas]]
   provedor = "runpod_publico"
   endpoint = "z-image-turbo"
+  aceita_imagem = true
 
   [[modelos.rapido.rotas]]
   provedor = "fal"

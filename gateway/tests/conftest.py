@@ -38,7 +38,8 @@ class FakeProviders:
         if url.startswith("https://api.runpod.ai/v2/") and url.endswith("/run"):
             return httpx.Response(503) if self.public_fails else httpx.Response(200, json={"id": "pub-1"})
         if "/status/pub-1" in url:
-            output = {"image_url": "https://runpod.cdn/img.png", "cost": 0.005}
+            # Formato real visto em 2026-10-10 (z-image-turbo)
+            output = {"result": "https://runpod.cdn/img.png", "cost": 0.005}
             return httpx.Response(200, json={"status": self.status, "output": output})
 
         # fal.ai

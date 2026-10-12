@@ -100,7 +100,8 @@ class RunPodServerless(_RunPodBase):
 class RunPodPublic(_RunPodBase):
     """Public Endpoints: https://docs.runpod.io/public-endpoints/overview
 
-    Devolvem {"image_url": ..., "cost": ...}. A URL expira em 7 dias.
+    Devolvem {"result": <url>, "cost": ...} (alguns modelos usam "image_url").
+    A URL expira em 7 dias.
     """
 
     name = "runpod_publico"
@@ -109,13 +110,19 @@ class RunPodPublic(_RunPodBase):
         return route.get("endpoint", "")
 
     def payload(self, req: ImageRequest) -> dict:
-        return {
+        body = {
             "prompt": req.prompt,
             "size": f"{req.width}*{req.height}",
             "seed": -1 if req.seed is None else req.seed,
         }
+        if req.image:
+            body["image"] = req.image  # link ou data URI: a RunPod aceita os dois
+            if req.strength is not None:
+                body["strength"] = req.strength
+        return body
 
     def parse_output(self, output: dict) -> PollResult:
-        if not output.get("image_url"):
-            return PollResult("failed", error=str(output.get("error") or "resposta sem image_url"))
-        return PollResult("succeeded", images=[GeneratedImage(url=output["image_url"])], cost_usd=output.get("cost"))
+        url = output.get("result") or output.get("image_url")
+        if not isinstance(url, str) or not url:
+            return PollResult("failed", error=str(output.get("error") or "resposta sem URL da imagem"))
+        return PollResult("succeeded", images=[GeneratedImage(url=url)], cost_usd=output.get("cost"))
