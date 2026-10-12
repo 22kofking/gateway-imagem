@@ -91,7 +91,8 @@ def test_limite_diario(client):
 
 def test_uso_e_custo(client, fake):
     fake.own_endpoint_fails = True
-    client.post("/v1/images", json={"prompt": "gato", "wait": True}, headers=AUTH)
+    job = client.post("/v1/images", json={"prompt": "gato", "wait": True}, headers=AUTH).json()
+    assert job["cost_usd"] == 0.005
     usage = client.get("/v1/usage", headers=AUTH).json()
     assert usage["hoje"] == 1
     assert usage["por_modelo"] == [{"model": "rapido", "provider": "runpod_publico", "imagens": 1, "custo_usd": 0.005}]

@@ -74,6 +74,7 @@ def get(job_id: str, app_name: str) -> JobResponse | None:
         status=row["status"],
         images=json.loads(row["images"]) if row["images"] else [],
         error=row["error"],
+        cost_usd=row["cost_usd"],
         created_at=row["created_at"],
         finished_at=row["finished_at"],
     )

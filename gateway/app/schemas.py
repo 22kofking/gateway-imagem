@@ -32,6 +32,7 @@ class JobResponse(BaseModel):
     status: JobStatus
     images: list[str] = []
     error: str | None = None
+    cost_usd: float | None = Field(default=None, description="Custo informado pelo provedor, quando ele informa")
     created_at: float
     finished_at: float | None = None
 

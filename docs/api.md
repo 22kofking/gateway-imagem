@@ -21,7 +21,7 @@ Respostas:
 
 ## GET /v1/jobs/{id}
 
-Consulta um pedido. `status` é `running`, `succeeded` ou `failed` (com `error`). Recomendação: consultar a cada 1 a 2 segundos. Um app só enxerga os próprios pedidos.
+Consulta um pedido. `status` é `running`, `succeeded` ou `failed` (com `error`). `cost_usd` traz o custo da imagem em dólar quando o provedor informa (os modelos prontos da RunPod informam); senão vem `null`. Recomendação: consultar a cada 1 a 2 segundos. Um app só enxerga os próprios pedidos.
 
 ## GET /v1/models
 
